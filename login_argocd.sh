@@ -1,4 +1,4 @@
-export PSWD=$(sudo microk8s kubectl get secret argocd-initial-admin-secret -n argocd -o=jsonpath='{.data.password}' | base64 --decode)
+export PSWD=$(kubectl get secret argocd-initial-admin-secret -n argocd -o=jsonpath='{.data.password}' | base64 --decode)
 
 export HOST=$(hostname -I | awk '{print $1}')
             

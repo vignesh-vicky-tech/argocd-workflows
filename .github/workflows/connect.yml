@@ -54,13 +54,15 @@ jobs:
     
     - name: Create app in argocd within VM
       run: | 
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
+           # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
 
 
   
-    - name: Sync app
-      run: |
-          argocd app sync my-app
+    # - name: Sync app
+    #   run: |
+    #       argocd app my-app
+    #       argocd app sync my-app
     
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4

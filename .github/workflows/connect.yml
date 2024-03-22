@@ -3,9 +3,7 @@ name: Create App in ArgoCD
 on:
   workflow_dispatch:
     inputs:
-      instancePublicIP:
-        description: 'The public ip of instance'  
-        required: true 
+     
       name:
         description: 'Name of the EC2 Instance'  
         required: true 
@@ -28,33 +26,33 @@ jobs:
           mkdir -p ~/.ssh/
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa ${{ github.event.inputs.instancePublicIP}} >> ~/.ssh/known_hosts
+          ssh-keyscan -t rsa ${{ secrets.instancePublicIP }} >> ~/.ssh/known_hosts
     
     - name: SSH into VM
       run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP}} ' ls -la'
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} ' ls -la'
 
     - name: Checkout Repository
       uses: actions/checkout@v2
 
     - name: Copy all bash scripts to VM
       run: |
-          scp *.sh ubuntu@${{ github.event.inputs.instancePublicIP }}:/home/ubuntu
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'ls -la'
+          scp *.sh ubuntu@${{  secrets.instancePublicIP }}:/home/ubuntu
+          ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'ls -la'
     
     - name: Execute the transferred scripts within VM
       run: |
            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'bash install_docker_k8s.sh && newgrp microk8s'
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "bash login_argocd.sh"
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
 
     - name: Retrieve the Argocd Password       
       run: |
            mkdir -p artifacts
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
     
     - name: Create app in argocd within VM
       run: | 
-          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
+          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
 
 

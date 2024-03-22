@@ -1,69 +1,91 @@
-name: Create App in ArgoCD
+# name: Create App in ArgoCD
 
-on:
-  workflow_dispatch:
-    inputs:
+# on:
+#   workflow_dispatch:
+#     inputs:
      
-      name:
-        description: 'Name of the EC2 Instance'  
-        required: true 
-      Reponame:
-        description: 'Reponame'
-        required: true
+#       name:
+#         description: 'Name of the EC2 Instance'  
+#         required: true 
+#       Reponame:
+#         description: 'Reponame'
+#         required: true
  
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "greet"
-  greet:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+# # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# jobs:
+#   # This workflow contains a single job called "greet"
+#   greet:
+#     # The type of runner that the job will run on
+#     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    - name: Set up SSH key
-      run: |
-          mkdir -p ~/.ssh/
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa ${{ secrets.instancePublicIP }} >> ~/.ssh/known_hosts
+#     # Steps represent a sequence of tasks that will be executed as part of the job
+#     steps:
+#     - name: Set up SSH key
+#       run: |
+#           mkdir -p ~/.ssh/
+#           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           ssh-keyscan -t rsa ${{ secrets.instancePublicIP }} >> ~/.ssh/known_hosts
     
-    - name: SSH into VM
-      run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} ' ls -la'
+#     - name: SSH into VM
+#       run: |
+#           ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} ' ls -la'
 
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+#     - name: Checkout Repository
+#       uses: actions/checkout@v2
 
-    - name: Copy all bash scripts to VM
-      run: |
-          scp *.sh ubuntu@${{  secrets.instancePublicIP }}:/home/ubuntu
-          ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'ls -la'
+#     - name: Copy all bash scripts to VM
+#       run: |
+#           scp *.sh ubuntu@${{  secrets.instancePublicIP }}:/home/ubuntu
+#           ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'ls -la'
     
-    - name: Execute the transferred scripts within VM
-      run: |
-           # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'bash install_docker_k8s.sh && newgrp microk8s'
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
+#     - name: Execute the transferred scripts within VM
+#       run: |
+#            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'bash install_docker_k8s.sh && newgrp microk8s'
+#            ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
 
-    - name: Retrieve the Argocd Password       
-      run: |
-           mkdir -p artifacts
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
+#     - name: Retrieve the Argocd Password       
+#       run: |
+#            mkdir -p artifacts
+#            ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
     
-    - name: Create app in argocd within VM
-      run: | 
-          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
-           # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
+#     - name: Create app in argocd within VM
+#       run: | 
+#           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
+#            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
 
 
   
     
     
-    # - name: Upload Artifacts
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: ArgoCdCreds
-    #     path: artifacts
-    #     retention-days: 1
+#     # - name: Upload Artifacts
+#     #   uses: actions/upload-artifact@v4
+#     #   with:
+#     #     name: ArgoCdCreds
+#     #     path: artifacts
+#     #     retention-days: 1
+
+
+name: Print Output to File
+
+on:
+  workflow_dispatch:
+
+jobs:
+  print-output:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Print EC2 Instance IP
+        id: print-ip
+        run: |
+          aws ec2 describe-instances --instance-ids i-0528a91e48742ace3 --query "Reservations[*].Instances[*].PublicIpAddress" --output text > output.txt
+
+      - name: Display Output
+        run: cat output.txt
 
   

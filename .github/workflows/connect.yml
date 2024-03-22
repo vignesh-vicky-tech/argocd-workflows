@@ -57,7 +57,7 @@ jobs:
          # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
 
     - name: Pause for 1 minute
-      run: sleep 60
+      run: sleep 180
       
     - name:  Print EC2 Instance IP
       env:

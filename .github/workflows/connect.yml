@@ -53,7 +53,30 @@ jobs:
     - name: Create app in argocd within VM
       run: | 
           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
-           # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
+          sleep 60
+        # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
+
+    - name:  Print EC2 Instance IP
+      env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: 'us-east-1'
+      run: |
+        ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo kubectl get managed | grep ${{ github.event.inputs.name}} | awk '{ print \$4 }'" > instance-id.txt 
+        
+        aws ec2 describe-instances --instance-ids $(cat instance-id.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > output.txt
+
+    - name: Display Output
+      run: cat output.txt
+
+    - name: Upload output.txt as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+          name: aws-cli-output
+          path: output.txt
+
+    
+          
 
 
   

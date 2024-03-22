@@ -53,8 +53,8 @@ jobs:
     - name: Create app in argocd within VM
       run: | 
           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
-          sleep 60
-        # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
+        #   sleep 60
+         # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
 
     - name:  Print EC2 Instance IP
       env:

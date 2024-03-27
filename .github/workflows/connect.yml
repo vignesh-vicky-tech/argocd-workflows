@@ -50,13 +50,12 @@ jobs:
       run: |
            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'bash install_docker_k8s.sh && newgrp microk8s'
            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }}
-           export HOST=$(hostname -I | awk '{print $1}')
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "export HOST=$(hostname -I | awk '{print $1}')"
             
-           sudo argocd login $HOST:32145 --username developer1 --password ${{ github.event.inputs.Password }} --insecure
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd login $HOST:32145 --username developer1 --password ${{ github.event.inputs.Password }} --insecure"
 
-           echo 'Fetching argocd version'
-           sudo argocd version
+           # echo 'Fetching argocd version'
+           # sudo argocd version
 
     # - name: Retrieve the Argocd Password       
     #   run: |

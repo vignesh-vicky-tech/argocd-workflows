@@ -13,10 +13,7 @@ on:
       user:
         description: 'Name of the user'  
         required: true
-      Password:
-        description: 'Users Password'  
-        required: true
- 
+     
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -49,22 +46,17 @@ jobs:
     - name: Execute the transferred scripts within VM
       run: |
            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'bash install_docker_k8s.sh && newgrp microk8s'
-           # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "export HOST=$(hostname -I | awk '{print $1}')"
-            
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd login $HOST:32145 --username developer1 --password ${{ github.event.inputs.Password }} --insecure"
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
+          
 
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} echo 'Fetching argocd version'
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} sudo argocd version
-
-    - name: Retrieve the Argocd Password       
-      run: |
-           mkdir -p artifacts
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
+    # - name: Retrieve the Argocd Password       
+    #   run: |
+    #        mkdir -p artifacts
+    #        ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
     
     - name: Create app in argocd within VM
       run: | 
-          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }} --project default --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
+          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }} --project demo --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
       
          # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
 
@@ -122,10 +114,10 @@ jobs:
            # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'bash install_docker_k8s.sh && newgrp microk8s'
            ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
 
-    - name: Retrieve the Argocd Password       
-      run: |
-           mkdir -p artifacts
-           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
+    # - name: Retrieve the Argocd Password       
+    #   run: |
+    #        mkdir -p artifacts
+    #        ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
     
     - name: Create app in argocd within VM
       run: | 

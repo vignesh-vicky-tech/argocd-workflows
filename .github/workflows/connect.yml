@@ -10,15 +10,18 @@ on:
       Reponame:
         description: 'Reponame'
         required: true
+      user:
+        description: 'Name of the user'  
+        required: true
  
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "greet"
-  greet:
+  developer1:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
+    if: ${{ github.event.inputs.user == 'developer1' }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - name: Set up SSH key
@@ -52,7 +55,72 @@ jobs:
     
     - name: Create app in argocd within VM
       run: | 
-          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }}  --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
+          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }} --project default --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
+      
+         # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
+
+    - name: Pause for 1 minute
+      run: sleep 180
+      
+    - name:  Print EC2 Instance IP
+      env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: 'us-east-1'
+      run: |
+        ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo kubectl get managed | grep ${{ github.event.inputs.name}} | awk '{ print \$4 }'" > instance-id.txt 
+        
+        aws ec2 describe-instances --instance-ids $(cat instance-id.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > output.txt
+
+    - name: Display Output
+      run: cat output.txt
+
+    - name: Upload output.txt as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+          name: aws-cli-output
+          path: output.txt
+
+
+
+  developer2:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.user == 'developer2' }}
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Set up SSH key
+      run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa ${{ secrets.instancePublicIP }} >> ~/.ssh/known_hosts
+    
+    - name: SSH into VM
+      run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} ' ls -la'
+
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Copy all bash scripts to VM
+      run: |
+          scp *.sh ubuntu@${{  secrets.instancePublicIP }}:/home/ubuntu
+          ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'ls -la'
+    
+    - name: Execute the transferred scripts within VM
+      run: |
+           # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ github.event.inputs.instancePublicIP }} 'bash install_docker_k8s.sh && newgrp microk8s'
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "bash login_argocd.sh"
+
+    - name: Retrieve the Argocd Password       
+      run: |
+           mkdir -p artifacts
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
+    
+    - name: Create app in argocd within VM
+      run: | 
+          ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create ${{ github.event.inputs.name }} --project sample --repo https://github.com/vignesh-vicky-tech/${{ github.event.inputs.Reponame }}.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy automated"
       
          # ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd app create myapp  --repo https://github.com/vignesh-vicky-tech/new-repos.git --path yaml-files --dest-server https://kubernetes.default.svc --dest-namespace default"
 
@@ -80,6 +148,15 @@ jobs:
 
     
           
+
+
+  
+    
+    
+  
+
+
+  
 
 
   

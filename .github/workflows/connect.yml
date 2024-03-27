@@ -54,8 +54,8 @@ jobs:
             
            ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "sudo argocd login $HOST:32145 --username developer1 --password ${{ github.event.inputs.Password }} --insecure"
 
-           # echo 'Fetching argocd version'
-           # sudo argocd version
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} echo 'Fetching argocd version'
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} sudo argocd version
 
     # - name: Retrieve the Argocd Password       
     #   run: |

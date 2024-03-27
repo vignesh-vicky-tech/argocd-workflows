@@ -57,10 +57,10 @@ jobs:
            ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} echo 'Fetching argocd version'
            ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} sudo argocd version
 
-    # - name: Retrieve the Argocd Password       
-    #   run: |
-    #        mkdir -p artifacts
-    #        ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
+    - name: Retrieve the Argocd Password       
+      run: |
+           mkdir -p artifacts
+           ssh -v -i ~/.ssh/id_rsa ubuntu@${{ secrets.instancePublicIP }} "kubectl get secrets -n argocd argocd-initial-admin-secret -o=jsonpath={.data.password} | base64 -d" > artifacts/pswd.txt
     
     - name: Create app in argocd within VM
       run: | 

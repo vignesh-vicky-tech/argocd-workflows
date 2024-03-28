@@ -13,6 +13,9 @@ on:
       user:
         description: 'Name of the user'  
         required: true
+      Password:
+        description: 'Name of the user'  
+        required: true
      
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -42,6 +45,13 @@ jobs:
       run: |
           scp *.sh ubuntu@${{  secrets.instancePublicIP }}:/home/ubuntu
           ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'ls -la'
+
+    - name: Login to developer1
+      run: |    
+         ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'export HOST=$(hostname -I | awk '{print $1}')'  
+         ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'sudo argocd login $HOST:32145 --username developer1 --password ${{ github.event.inputs.Password }} --insecure'
+         echo 'Fetching argocd version'
+         ssh -i ~/.ssh/id_rsa ubuntu@${{  secrets.instancePublicIP }} 'sudo argocd version'
     
     - name: Execute the transferred scripts within VM
       run: |
